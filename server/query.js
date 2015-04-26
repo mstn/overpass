@@ -1,8 +1,4 @@
 
-var ensureArray = function(object){
-  return [].concat(object);
-}
-
 buildMongoDbQuery = function(query, bbox){
   var select = {};
   select.geometry = {

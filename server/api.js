@@ -35,11 +35,15 @@ var processResponse = function(future){
 };
 
 
-var saveInCache = function(tags, bbox){
-  GeoQueries.insert({
-    createdAt: new Date,
-    bbox: createPolygon( bbox ),
-    tags: tags
+var saveInCache = function(query, bbox){
+  query = ensureArray(query);
+  query.forEach( function(stm){
+    GeoQueries.insert({
+      createdAt: new Date,
+      type: stm.type,
+      bbox: createPolygon( bbox ),
+      tags: stm.filter
+    });
   });
 }
 
@@ -56,7 +60,7 @@ var isInCache = function(query, bbox){
     // bbox is a convex polygon
     // hence is contained if its vertices are within the candiate outer polygon
     return _.every( inner.coordinates[0], function(point){
-      inside(point, outer);
+      return inside(point, outer);
     });
   });
 }

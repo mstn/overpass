@@ -15,3 +15,7 @@ createPolygon = function(bbox){
     ]]
   };
 };
+
+ensureArray = function(object){
+  return [].concat(object);
+}
