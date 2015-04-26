@@ -20,6 +20,7 @@ buildMongoDbQuery = function(query, bbox){
     });
     select.$or.push( term );
   });
+  Overpass.log('mongo query');
   Overpass.log( select );
   return select;
 };
@@ -41,6 +42,7 @@ buildOverpassQuery = function(query, bbox){
   // TODO necessary to get nodes in ways, however can we optimize it?
   request += '(._;>;);';
   request += "out;";
+  Overpass.log('overpass query');
   Overpass.log( request );
   return request;
 };
@@ -61,6 +63,7 @@ buildCacheQuery = function(query, bbox){
     });
     select.$or.push( term );
   });
+  Overpass.log('cache query');
   Overpass.log( select );
   return select;
 };
