@@ -20,7 +20,7 @@ buildMongoDbQuery = function(query, bbox){
     });
     select.$or.push( term );
   });
-  Overpass.log( request );
+  Overpass.log( select );
   return select;
 };
 
@@ -61,6 +61,6 @@ buildCacheQuery = function(query, bbox){
     });
     select.$or.push( term );
   });
-  Overpass.log( request );
+  Overpass.log( select );
   return select;
 };
