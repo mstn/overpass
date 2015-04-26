@@ -68,6 +68,8 @@ Meteor.publish('overpass', function(query, bbox, options){
 
   if ( ! isInCache(query, bbox) ){
 
+    Overpass.log('No data in cache. Calling overpass.');
+
     saveInCache(query, bbox);
 
     // call overpass method in async mode
