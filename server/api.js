@@ -47,7 +47,10 @@ var isInCache = function(query, bbox){
   var select = buildCacheQuery(query, bbox);
   var inner = createPolygon(bbox);
   // TODO stale information
-  var overlaps = GeoQueries.find( select ).fetch();
+  var overlaps;
+  Tracker.nonreactive(function(){
+    overlaps = GeoQueries.find( select ).fetch();
+  });
   return _.some( overlaps, function(overlap){
     var outer = overlap.bbox.coordinates[0];
     // bbox is a convex polygon
