@@ -16,23 +16,30 @@ GeoCache._ensureIndex({ id:1 });
 GeoCache._ensureIndex({ geometry : "2dsphere" });
 
 // based on https://github.com/perliedman/query-overpass
-var processResponse = function(future){
+var processResponse = function(callback){
   return Meteor.bindEnvironment(
     function(error, response){
       var geojson;
 
       if (!error && response.statusCode === 200) {
         geojson = osmtogeojson(JSON.parse(response.content));
-        future.return(geojson);
+        callback(undefined, geojson);
       } else if (error) {
-        future.throw(error);
+        callback(error);
       } else if (response) {
-        future.throw('Request failed: HTTP ' + response.statusCode);
+        callback('Request failed: HTTP ' + response.statusCode);
       } else {
-        future.throw('Unknown error');
+        callback('Unknown error');
       }
     });
 };
+
+var sendRequest = function(query, bbox, options, callback){
+  options = options || {};
+  var url = options.overpassUrl || 'http://overpass-api.de/api/interpreter';
+  options.content = buildOverpassQuery(query, bbox);
+  HTTP.post(url, options, processResponse(callback) );
+}
 
 
 var saveInCache = function(query, bbox){
@@ -70,14 +77,17 @@ Meteor.publish('overpass', function(query, bbox, options){
 
   var self = this;
 
+  Overpass.log('Subscribe to overpass.');
+
   if ( ! isInCache(query, bbox) ){
 
     Overpass.log('No data in cache. Calling overpass.');
 
     saveInCache(query, bbox);
 
-    // call overpass method in async mode
-    Meteor.call('overpass', query, bbox, options, function(err, response){
+    // call overpass in async mode
+    sendRequest(query, bbox, options, function(err, response){
+      Overpass.log('fetched data from overpass');
       if (!err){
         // add features to cache
         response.features.forEach( function(feature){
@@ -90,8 +100,10 @@ Meteor.publish('overpass', function(query, bbox, options){
         self.error(err);
       }
     });
+
   }
 
+  Overpass.log('return cached results');
   // returns now
   return GeoCache.find( buildMongoDbQuery(query, bbox) );
 });
@@ -108,15 +120,16 @@ Meteor.methods({
     check(bbox, [Number]);
 
     query = query || {};
-    options = options || {};
 
     var future = new Future();
-    var url = options.overpassUrl || 'http://overpass-api.de/api/interpreter';
-    var response;
 
-    options.content = buildOverpassQuery(query, bbox);
-
-    HTTP.post(url, options, processResponse(future) );
+    sendRequest(query, bbox, options, function(err, response){
+      if (err){
+        future.throw(err)
+      } else {
+        future.return(response);
+      }
+    });
 
     return future.wait();
   }
