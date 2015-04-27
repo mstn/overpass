@@ -23,7 +23,7 @@ Package.onUse(function(api) {
   api.addFiles([
     'server/utils.js',
     'server/cache.js',
-    'server/query.js',
+    'server/overpass.js',
     'server/api.js'
   ], 'server');
   api.export('Overpass');
@@ -37,7 +37,7 @@ Package.onTest(function(api) {
   api.addFiles([
     'server/utils.js',
     'server/cache.js',
-    'server/query.js',
+    'server/overpass.js',
     'server/api.js'
   ], 'server');
   api.addFiles(['tests/test.js'], 'client');

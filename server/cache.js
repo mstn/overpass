@@ -7,6 +7,27 @@ GeoQueries._ensureIndex({ bbox : "2dsphere" });
 
 Cache = {};
 
+var buildCacheQuery = function(query, bbox){
+  var select = {};
+  select.bbox = {
+     '$geoIntersects':{
+       '$geometry': createPolygon( bbox )
+     }
+  };
+  select.$or = [];
+  query = ensureArray(query);
+  query.forEach( function(stm){
+    var term = {};
+    _.each( stm.filter, function(value, key){
+      term[ 'tags.' + key ] = value;
+    });
+    select.$or.push( term );
+  });
+  Overpass.log('cache query');
+  Overpass.log( select );
+  return select;
+};
+
 Cache.save = function(query, bbox){
   query = ensureArray(query);
   query.forEach( function(stm){
