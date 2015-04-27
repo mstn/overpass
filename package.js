@@ -22,6 +22,7 @@ Package.onUse(function(api) {
   api.addFiles('both/api.js');
   api.addFiles([
     'server/utils.js',
+    'server/cache.js',
     'server/query.js',
     'server/api.js'
   ], 'server');
@@ -35,6 +36,7 @@ Package.onTest(function(api) {
   api.addFiles('both/api.js');
   api.addFiles([
     'server/utils.js',
+    'server/cache.js',
     'server/query.js',
     'server/api.js'
   ], 'server');
