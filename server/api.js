@@ -9,7 +9,7 @@ Meteor.publish('overpass', function(query, bbox, options){
 
   query = ensureArray(query);
 
-  Overpass.log('Peep up to cache to see if previous results can be used.');
+  Overpass.log('Peep up cache to see if previous results can be used.');
 
   uncovered = Cache.getUncovered(query, bbox);
 
@@ -53,10 +53,16 @@ Meteor.methods({
 
     query = query || {};
     query = ensureArray(query);
+    query = query.map( function(stm){
+      return {
+        query: stm,
+        bbox: bbox
+      };
+    });
 
     var future = new Future();
 
-    Overpass.sendRequest(query, bbox, options, function(err, response){
+    Overpass.sendRequest(query, options, function(err, response){
       if (err){
         future.throw(err)
       } else {
