@@ -18,6 +18,10 @@ Meteor.publish('overpass', function(query, bbox, options){
     Overpass.log('No full data in cache. Calling overpass.');
     Overpass.log( uncovered );
 
+    uncovered.forEach( function(q, index){
+      self.added('covers', index, q);
+    });
+
     // call overpass in async mode
     Overpass.sendRequest(uncovered, options, function(err, response){
       if (err){
@@ -31,6 +35,9 @@ Meteor.publish('overpass', function(query, bbox, options){
         // add features to cache
         response.features.forEach( Overpass.update );
       }
+      uncovered.forEach( function(q, index){
+        self.removed('covers', index, q);
+      });
     });
 
   }

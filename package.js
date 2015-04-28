@@ -1,6 +1,6 @@
 Package.describe({
   name: 'mstn:overpass',
-  version: '0.0.1',
+  version: '0.1.0',
   // Brief, one-line summary of the package.
   summary: 'cache overpass data on server',
   // URL to the Git repository containing the source code for this package.
