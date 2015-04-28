@@ -11,14 +11,13 @@ Package.describe({
 });
 
 Npm.depends({
-  'osmtogeojson':'2.2.5',
-  'point-in-polygon':'0.0.0'
+  'osmtogeojson':'2.2.5'
 });
 
 
 Package.onUse(function(api) {
   api.versionsFrom('1.0');
-  api.use(['http','mongo'], 'server');
+  api.use(['http','mongo', 'yauh:turfjs'], 'server');
   api.addFiles('both/api.js');
   api.addFiles([
     'server/utils.js',
@@ -31,7 +30,7 @@ Package.onUse(function(api) {
 
 Package.onTest(function(api) {
   api.use('tinytest');
-  api.use(['http','mongo'], 'server');
+  api.use(['http','mongo', 'yauh:turfjs'], 'server');
   api.use(['minimongo', 'mongo-livedata'], 'client');
   api.addFiles('both/api.js');
   api.addFiles([

@@ -1,4 +1,3 @@
-var inside = Npm.require('point-in-polygon');
 
 // store geo queries indexed by bbox
 var GeoQueries = new Mongo.Collection('geo-queries');
@@ -7,11 +6,22 @@ GeoQueries._ensureIndex({ bbox : "2dsphere" });
 
 Cache = {};
 
+var swapLatLng = function( bbox ){
+  return [ bbox[1], bbox[0], bbox[3], bbox[2] ];
+};
+
+var polygon2bbox = function( feature ){
+  var extent = Turf.extent(feature);
+  return swapLatLng( extent );
+};
+
+// TODO dont fetch stale information
 var buildCacheQuery = function(query, bbox){
   var select = {};
+  var polygon = Turf.bboxPolygon(bbox);
   select.bbox = {
      '$geoIntersects':{
-       '$geometry': createPolygon( bbox )
+       '$geometry': polygon.geometry
      }
   };
   select.$or = [];
@@ -24,36 +34,51 @@ var buildCacheQuery = function(query, bbox){
     select.$or.push( term );
   });
   Overpass.log('cache query');
-  Overpass.log( select );
+  Overpass.log( JSON.stringify(select) );
   return select;
 };
 
 Cache.save = function(query, bbox){
+
+  bbox = swapLatLng( bbox );
+
   query = ensureArray(query);
   query.forEach( function(stm){
     GeoQueries.insert({
       createdAt: new Date,
       type: stm.type,
-      bbox: createPolygon( bbox ),
+      bbox: Turf.bboxPolygon( bbox ).geometry,
       tags: stm.filter
     });
   });
 }
 
-Cache.contains = function(query, bbox){
+Cache.getUncovered = function(query, bbox){
+
+  bbox = swapLatLng( bbox );
+
+  // TODO for each $or make different query
   var select = buildCacheQuery(query, bbox);
-  var inner = createPolygon(bbox);
-  // TODO stale information
+  var inner = Turf.bboxPolygon(bbox);
   var overlaps;
+
   Tracker.nonreactive(function(){
     overlaps = GeoQueries.find( select ).fetch();
   });
-  return _.some( overlaps, function(overlap){
-    var outer = overlap.bbox.coordinates[0];
-    // bbox is a convex polygon
-    // hence is contained if its vertices are within the candiate outer polygon
-    return _.every( inner.coordinates[0], function(point){
-      return inside(point, outer);
+
+  if ( overlaps.length > 0){
+
+    overlaps.forEach( function(overlap){
+      if ( inner ){
+        inner = Turf.erase(inner, {
+          type:'Feature',
+          geometry:overlap.bbox
+        });
+      }
     });
-  });
+  }
+
+  // return a bbox containing the uncovered polygon
+  // overpass seems more efficient with bbox instead of more irregular polygons
+  return inner && polygon2bbox(inner);
 }
