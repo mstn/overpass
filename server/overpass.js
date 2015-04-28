@@ -18,7 +18,6 @@ var buildMongoDbQuery = function(query, bbox){
      }
   };
   select.$or = [];
-  query = ensureArray(query);
   query.forEach( function(stm){
     var term = {};
     term[ 'properties.type' ] = stm.type;

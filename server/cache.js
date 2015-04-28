@@ -46,7 +46,6 @@ Cache.getUncovered = function(query, bbox){
   var results = [];
 
   bbox = swapLatLng( bbox );
-  query = ensureArray(query);
 
   query.forEach( function( stm ){
     var inner = Turf.bboxPolygon(bbox);

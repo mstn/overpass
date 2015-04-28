@@ -7,6 +7,8 @@ Meteor.publish('overpass', function(query, bbox, options){
   var self = this;
   var uncovered;
 
+  query = ensureArray(query);
+
   Overpass.log('Peep up to cache to see if previous results can be used.');
 
   uncovered = Cache.getUncovered(query, bbox);
@@ -50,6 +52,7 @@ Meteor.methods({
     check(bbox, [Number]);
 
     query = query || {};
+    query = ensureArray(query);
 
     var future = new Future();
 
