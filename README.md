@@ -4,8 +4,9 @@ Meteor package that fetches OpenStreetMap data using Overpass API and caches res
 
 Main features
 
-* Caching based on bounding box and searched tags. If a bounding box is already contained in the bounding box of a previous query, don't send a new request to Overpass.
+* Caching based on bounding box and searched tags. We use MongoDB spatial capabilities and [Turf](http://turfjs.org/) to build Overpass queries over the "minimum" bounding box.
 * Returned data are in GeoJson ready to be used in Leaflet or similar client libraries. Based on [osmtogeojson](https://www.npmjs.com/package/osmtogeojson) package.
+* Overpass subscription returns available cached geo data immediately without any delay. When it gets a response from Overpass API, then it updates the result set also on the client.
 * It is not possible to ask arbitrary Overpass queries. First, all queries are within a bounding box. Second, every query should be mappable to MongoDB select (our cache).
 
 At the moment we are able to perform unions of simple queries where tags match their filter exactly. For example, the following query returns shelters (node) OR alpine huts (node) OR hiking trails (way).
@@ -39,7 +40,6 @@ At the moment we are able to perform unions of simple queries where tags match t
 
 * Strategies to limit the size of data returned to client (cached or not). For example: clustering, zoom limits, simplified geometries based on zoom level.
 * Stale information in geo cache
-* Calculate the minimum bounding box for overpass queries. Overpass allows us to select area as polygon and not simply bounding box.
 * More powerful query language closer to Overpass QL.
 
 
@@ -51,3 +51,4 @@ At the moment we are able to perform unions of simple queries where tags match t
 * http://wiki.openstreetmap.org/wiki/Overpass_API#Limitations
 * http://docs.mongodb.org/manual/applications/geospatial-indexes/
 * http://wiki.openstreetmap.org/wiki/Hiking
+* http://turfjs.org/
