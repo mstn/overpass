@@ -11,13 +11,13 @@ Meteor.publish('overpass', function(query, bbox, options){
 
   uncovered = Cache.getUncovered(query, bbox);
 
-  if ( uncovered ){
+  if ( uncovered.length > 0 ){
 
     Overpass.log('No full data in cache. Calling overpass.');
+    Overpass.log( uncovered );
 
-    // TODO also query could be uncovered
     // call overpass in async mode
-    Overpass.sendRequest(query, uncovered, options, function(err, response){
+    Overpass.sendRequest(uncovered, options, function(err, response){
       if (err){
         Overpass.error(err);
         // return error to the client and stop subscription
@@ -25,7 +25,7 @@ Meteor.publish('overpass', function(query, bbox, options){
         self.error(err);
       } else {
         Overpass.log('Overpass response: ' + response.features.length + ' items');
-        Cache.save(query, uncovered);
+        Cache.save(uncovered);
         // add features to cache
         response.features.forEach( Overpass.update );
       }

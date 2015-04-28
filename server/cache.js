@@ -15,70 +15,63 @@ var polygon2bbox = function( feature ){
   return swapLatLng( extent );
 };
 
-// TODO dont fetch stale information
-var buildCacheQuery = function(query, bbox){
+
+var buildCacheQuery = function(query, bboxPolygon){
   var select = {};
-  var polygon = Turf.bboxPolygon(bbox);
   select.bbox = {
      '$geoIntersects':{
-       '$geometry': polygon.geometry
+       '$geometry': bboxPolygon
      }
   };
-  select.$or = [];
-  query = ensureArray(query);
-  query.forEach( function(stm){
-    var term = {};
-    _.each( stm.filter, function(value, key){
-      term[ 'tags.' + key ] = value;
-    });
-    select.$or.push( term );
+  _.each( query.filter, function(value, key){
+    select[ 'tags.' + key ] = value;
   });
-  Overpass.log('cache query');
-  Overpass.log( JSON.stringify(select) );
   return select;
 };
 
-Cache.save = function(query, bbox){
-
-  bbox = swapLatLng( bbox );
-
-  query = ensureArray(query);
+Cache.save = function(query){
   query.forEach( function(stm){
+    bbox = swapLatLng( stm.bbox );
     GeoQueries.insert({
       createdAt: new Date,
-      type: stm.type,
+      type: stm.query.type,
       bbox: Turf.bboxPolygon( bbox ).geometry,
-      tags: stm.filter
+      tags: stm.query.filter
     });
   });
 }
 
 Cache.getUncovered = function(query, bbox){
 
+  var results = [];
+
   bbox = swapLatLng( bbox );
+  query = ensureArray(query);
 
-  // TODO for each $or make different query
-  var select = buildCacheQuery(query, bbox);
-  var inner = Turf.bboxPolygon(bbox);
-  var overlaps;
-
-  Tracker.nonreactive(function(){
-    overlaps = GeoQueries.find( select ).fetch();
+  query.forEach( function( stm ){
+    var inner = Turf.bboxPolygon(bbox);
+    var select = buildCacheQuery(stm, inner.geometry);
+    var overlaps = GeoQueries.find( select ).fetch();
+    if ( overlaps.length > 0){
+      overlaps.forEach( function(overlap){
+        if ( inner ){
+          inner = Turf.erase(inner, {
+            type:'Feature',
+            geometry:overlap.bbox
+          });
+        }
+      });
+    }
+    if ( inner ){
+      // return a bbox containing the uncovered polygon
+      // overpass seems more efficient with bbox instead of more irregular polygons
+      results.push( {
+        query: stm,
+        bbox: polygon2bbox(inner)
+      });
+    }
   });
 
-  if ( overlaps.length > 0){
 
-    overlaps.forEach( function(overlap){
-      if ( inner ){
-        inner = Turf.erase(inner, {
-          type:'Feature',
-          geometry:overlap.bbox
-        });
-      }
-    });
-  }
-
-  // return a bbox containing the uncovered polygon
-  // overpass seems more efficient with bbox instead of more irregular polygons
-  return inner && polygon2bbox(inner);
+  return results;
 }

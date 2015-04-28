@@ -32,15 +32,14 @@ var buildMongoDbQuery = function(query, bbox){
   return select;
 };
 
-var buildOverpassQuery = function(query, bbox){
+var buildOverpassQuery = function(query){
   var request = "[out:json];";
-  query = ensureArray(query);
   request += '(';
   query.forEach( function(stm){
-    request += stm.type + '(';
-    request += bbox.join(',');
+    request += stm.query.type + '(';
+    request += stm.bbox.join(',');
     request +=")";
-    _.each( stm.filter, function(value, key){
+    _.each( stm.query.filter, function(value, key){
       request += '[' + key + '=' + value + ']';
     });
     request += ";";
@@ -73,10 +72,10 @@ var processResponse = function(callback){
     });
 };
 
-Overpass.sendRequest = function(query, bbox, options, callback){
+Overpass.sendRequest = function(query, options, callback){
   options = options || {};
   var url = options.overpassUrl || 'http://overpass-api.de/api/interpreter';
-  options.content = buildOverpassQuery(query, bbox);
+  options.content = buildOverpassQuery(query);
   HTTP.post(url, options, processResponse(callback) );
 };
 
