@@ -82,6 +82,12 @@ Overpass.find = function(query, bbox){
   return GeoCache.find( buildMongoDbQuery(query, bbox) );
 };
 
+Overpass.findById = function(osmId){
+  return GeoCache.find({
+    id:osmId
+  });
+};
+
 Overpass.update = function(feature){
   feature.updatedAt = new Date;
   GeoCache.upsert({id:feature.id}, feature);
